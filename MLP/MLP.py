@@ -67,13 +67,11 @@ percentage = 0.66 #percentage of data used for training
 X_train, Y_train = X[shuffle_range[:int(np.floor(percentage*len(X)))]], Y[shuffle_range[:int(np.floor(percentage*len(X)))]]
 X_test, Y_test = X[shuffle_range[int(np.ceil(percentage*len(X))):]], Y[shuffle_range[int(np.ceil(percentage*len(X))):]]
 
+#non tf variables
 hsize1 = 12 #size of first hidden layer
 hsize2 = 8	#size of second hidden layer
-x = tf.placeholder(tf.float32, [None, X.shape[1]], name="X")
-y_ = tf.placeholder(tf.float32, [None,  Y.shape[1]], name = "labels")
-p_keep_hidden = tf.placeholder(tf.float32)
-p_keep_input =  tf.placeholder(tf.float32)
-
+learning_rate = 0.001 #learning rate for Adam optimizer
+#tf variables
 W1 = init_weights((X.shape[1], hsize1), "W1") 
 b1 = init_bias((hsize1), "b1")
 W2 = init_weights((hsize1, hsize2), "W2") 
@@ -81,44 +79,51 @@ b2 = init_bias((hsize2), "b2")
 W3 = init_weights((hsize2, Y.shape[1]), "W3") 
 b3 = init_bias((Y.shape[1]), "b3")
 
-tf.summary.histogram("weights 1",W1)
-tf.summary.histogram("biases 1",b1)
-tf.summary.histogram("weights 2",W2)
-tf.summary.histogram("biases 2",b2)
+#tf placeholders
+x = tf.placeholder(tf.float32, [None, X.shape[1]], name="X")
+y_ = tf.placeholder(tf.float32, [None,  Y.shape[1]], name = "labels")
+p_keep_hidden = tf.placeholder(tf.float32)
+p_keep_input =  tf.placeholder(tf.float32)
 
-learning_rate = 0.001
+#setup neural network output
 y = forwardprop(x, W1, W2, W3, b1, b2, b3, p_keep_input, p_keep_hidden)
-
+#evaluate/optimize output performance
 with tf.name_scope("xent"):
+	""""
+	IMPORTANT: forwardprop() does not apply softmax because softmax is 
+	applied in tf.nn.softmax_cross_entropy_with_logits()
+	"""
 	xent = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = y, labels = y_))
 with tf.name_scope("train"):
 	optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(xent)
 with tf.name_scope("Accuracy"):
 	correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
 	accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-	
 
-# train_step = tf.train.GradientDescentOptimizer(0.01).minimize(cross_entropy)
+#setup tensorboard summaries	
+tf.summary.histogram("weights 1",W1)
+tf.summary.histogram("biases 1",b1)
+tf.summary.histogram("weights 2",W2)
+tf.summary.histogram("biases 2",b2)
 tf.summary.scalar("cross_entropy",xent)
 tf.summary.scalar("Accuracy",accuracy) 
-
+writer = tf.summary.FileWriter("../tb/MLP")
 merged_summary = tf.summary.merge_all()
 
 sess = tf.InteractiveSession()
-writer = tf.summary.FileWriter("/home/des/Dropbox/shrd_Nidhi/Data_MI/tb")
 writer.add_graph(sess.graph)
 tf.global_variables_initializer().run()
 
+#setup batch based SGD
 batch_size = 100
 for i in range(20000):
 	batch = random.sample(range(len(X_train)),batch_size)
 	batch_xs, batch_ys = X_train[batch], Y_train[batch]
-	if i%5 == 0:
+	if i%100 == 0:
 		s = sess.run(merged_summary,feed_dict={x: X_test, y_: Y_test, p_keep_input: 1, p_keep_hidden:1})
 		writer.add_summary(s,i)
 	sess.run(optimizer, feed_dict={x: batch_xs, y_: batch_ys, p_keep_input: 1, p_keep_hidden:1})
 
 prediction = tf.argmax(y,1)
-print(Y.shape[1])
 print(sess.run(prediction, feed_dict={x: X_test, y_: Y_test, p_keep_input: 1, p_keep_hidden:1}))
 print(sess.run(accuracy, feed_dict={x: X_test, y_: Y_test, p_keep_input: 1, p_keep_hidden:1}))
