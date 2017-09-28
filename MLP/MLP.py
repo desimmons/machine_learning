@@ -107,7 +107,7 @@ tf.summary.histogram("weights 2",W2)
 tf.summary.histogram("biases 2",b2)
 tf.summary.scalar("cross_entropy",xent)
 tf.summary.scalar("Accuracy",accuracy) 
-writer = tf.summary.FileWriter("../tb/MLP")
+writer = tf.summary.FileWriter("../tens_bor_dump/MLP")
 merged_summary = tf.summary.merge_all()
 
 sess = tf.InteractiveSession()
