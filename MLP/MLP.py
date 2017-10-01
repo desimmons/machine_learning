@@ -55,12 +55,27 @@ def forwardprop(X, w1, w2, w3, b1, b2, b3, p_keep_input, p_keep_hidden):
 	    # yhat = tf.nn.softmax(out_layer)  # The \varphi function
 	return out_layer
 
-
+stats = None
+fft = None
+order = None
 X,Y = scraper() #scraper scrapes data from specified folders
-X = feature(X) 
-print X.shape
+while stats != "y" and stats != "n":
+	stats=raw_input("Would you like to use statistical features (var, skew, percentiles, etc) (y/n): ")
+	if stats != "y" and stats != "n":
+		print "Obey the instructions!\n"
+while fft != "y" and fft != "n":
+	fft=raw_input("Would you like to use frequency sample features (y/n): ")
+	if stats != "y" and stats != "n":
+		print "Obey the instructions!\n"
+if fft == "y":
+	while type(order) != int:
+		order=int(raw_input("Enter an integer FFT order (e.g. 100): "))
+		if type(order) != int:
+			print "Obey the instructions!\n"
+	
+X = feature(X,stats,fft,order) 
 Y = one_hot(Y)
-print Y.shape
+
 
 shuffle_range = np.random.permutation(len(X)) #shuffle the data
 percentage = 0.66 #percentage of data used for training
@@ -116,7 +131,7 @@ tf.global_variables_initializer().run()
 
 #setup batch based SGD
 batch_size = 200
-for i in range(400000):
+for i in range(10000):
 	batch = random.sample(range(len(X_train)),batch_size)
 	batch_xs, batch_ys = X_train[batch], Y_train[batch]
 	if i%100 == 0:
@@ -126,4 +141,4 @@ for i in range(400000):
 
 prediction = tf.argmax(y,1)
 print(sess.run(prediction, feed_dict={x: X_test, y_: Y_test, p_keep_input: 1, p_keep_hidden:1}))
-print(sess.run(accuracy, feed_dict={x: X_test, y_: Y_test, p_keep_input: 1, p_keep_hidden:1}))
+print "Test data accuracy: " , sess.run(accuracy, feed_dict={x: X_test, y_: Y_test, p_keep_input: 1, p_keep_hidden:1})
