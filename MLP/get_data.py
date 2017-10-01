@@ -38,19 +38,21 @@ def feature(X):
 	import scipy.stats
 	features = []
 	for i in range(0,len(X)):
-		temp = [np.var(X[i]),\
-				np.percentile(X[i],10),\
-				np.percentile(X[i],20),\
-				np.percentile(X[i],30),\
-				np.percentile(X[i],40),\
-				np.percentile(X[i],50),\
-				np.percentile(X[i],60),\
-				np.percentile(X[i],70),\
-				np.percentile(X[i],80),\
-				np.percentile(X[i],90),\
-				np.amin(X[i]),\
-				np.amax(X[i]),\
-				np.ptp(X[i]),\
-				scipy.stats.skew(X[i])]
+		# temp = [np.var(X[i]),\
+		# 		np.percentile(X[i],10),\
+		# 		np.percentile(X[i],20),\
+		# 		np.percentile(X[i],30),\
+		# 		np.percentile(X[i],40),\
+		# 		np.percentile(X[i],50),\
+		# 		np.percentile(X[i],60),\
+		# 		np.percentile(X[i],70),\
+		# 		np.percentile(X[i],80),\
+		# 		np.percentile(X[i],90),\
+		# 		np.amin(X[i]),\
+		# 		np.amax(X[i]),\
+		# 		np.ptp(X[i]),\
+		# 		scipy.stats.skew(X[i])]
+		temp = np.array(abs(np.fft.fft(X[i],100)))
+		# temp = np.concatenate([np.array(temp),temp2])
 		features.append(temp/np.linalg.norm(temp))
 	return np.array(features)

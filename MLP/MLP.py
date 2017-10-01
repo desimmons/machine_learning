@@ -58,9 +58,9 @@ def forwardprop(X, w1, w2, w3, b1, b2, b3, p_keep_input, p_keep_hidden):
 
 X,Y = scraper() #scraper scrapes data from specified folders
 X = feature(X) 
-print len(X)
+print X.shape
 Y = one_hot(Y)
-print len(Y)
+print Y.shape
 
 shuffle_range = np.random.permutation(len(X)) #shuffle the data
 percentage = 0.66 #percentage of data used for training
@@ -68,8 +68,8 @@ X_train, Y_train = X[shuffle_range[:int(np.floor(percentage*len(X)))]], Y[shuffl
 X_test, Y_test = X[shuffle_range[int(np.ceil(percentage*len(X))):]], Y[shuffle_range[int(np.ceil(percentage*len(X))):]]
 
 #non tf variables
-hsize1 = 12 #size of first hidden layer
-hsize2 = 8	#size of second hidden layer
+hsize1 = 100 #size of first hidden layer
+hsize2 = 35	#size of second hidden layer
 learning_rate = 0.001 #learning rate for Adam optimizer
 #tf variables
 W1 = init_weights((X.shape[1], hsize1), "W1") 
@@ -115,14 +115,14 @@ writer.add_graph(sess.graph)
 tf.global_variables_initializer().run()
 
 #setup batch based SGD
-batch_size = 100
-for i in range(20000):
+batch_size = 200
+for i in range(400000):
 	batch = random.sample(range(len(X_train)),batch_size)
 	batch_xs, batch_ys = X_train[batch], Y_train[batch]
 	if i%100 == 0:
 		s = sess.run(merged_summary,feed_dict={x: X_test, y_: Y_test, p_keep_input: 1, p_keep_hidden:1})
 		writer.add_summary(s,i)
-	sess.run(optimizer, feed_dict={x: batch_xs, y_: batch_ys, p_keep_input: 1, p_keep_hidden:1})
+	sess.run(optimizer, feed_dict={x: batch_xs, y_: batch_ys, p_keep_input: 0.98, p_keep_hidden:0.98})
 
 prediction = tf.argmax(y,1)
 print(sess.run(prediction, feed_dict={x: X_test, y_: Y_test, p_keep_input: 1, p_keep_hidden:1}))
